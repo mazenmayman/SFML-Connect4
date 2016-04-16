@@ -23,23 +23,25 @@
 using namespace sf;
 using namespace std;
 
+
 #define rows    6
 #define cols    7
+#define win_size 4
 #define tile_size   100
-#define space_size 10
+#define space_size (0.1*tile_size)
 
-#define screen_width    (cols + 2) * tile_size
-#define screen_height   (rows + 2) * tile_size
+#define screen_width    ((cols + 2) * tile_size)
+#define screen_height   ((rows + 2) * tile_size)
 
-#define game_width  cols * tile_size
-#define game_height rows * tile_size
+#define game_width  (cols * tile_size)
+#define game_height (rows * tile_size)
 
 #define game_xpos   tile_size
 #define game_ypos   tile_size
 
 #define circle_radius (tile_size - space_size) / 2
 
-#define win_size 4
+
 
 enum Turn { player1 = 1, player2 };
 
@@ -173,6 +175,23 @@ int main()
                         if(!changed){
                             result_text.setString("Idiot! can't play here.");
                         }
+                        else{ // check winner, game_finished or switch turns
+                            if(check_won(game_array, curr_player)){
+                                game_end = true;
+                                curr_player_text.setString("");
+                                result_text.setString("Player" + to_string(curr_player.p_turn) + " won! \t\t Press Space to restart");
+                                result_text.setColor(curr_player.p_color);
+                            }
+                            // check if the game_finished
+                            else if(game_finished(game_array)) {
+                                game_end = true;
+                                curr_player_text.setString("");
+                                result_text.setString("Game Over! Press Space to restart");
+                            }
+                            else{ // just switch turns
+                                switch_player(curr_player, curr_player_circle, curr_player_text, result_text);
+                            }
+                        }
                         
                     }
                 }
@@ -184,26 +203,8 @@ int main()
             }
         }
         
-        // check winner or game_finished
-        if(changed){
-            // check if the player won
-            if(check_won(game_array, curr_player)){
-                game_end = true;
-                curr_player_text.setString("");
-                result_text.setString("Player" + to_string(curr_player.p_turn) + " won! \t\t Press Space to restart");
-                result_text.setColor(curr_player.p_color);
-            }
-            // check if the game_finished
-            else if(game_finished(game_array)) {
-                result_text.setString("Game Over! Press Space to restart");
-            }
-            else{ // just switch turns
-                switch_player(curr_player, curr_player_circle, curr_player_text, result_text);
-            }
-        }
-        
         // drawing
-        window.clear(Color::White);
+        window.clear(Color::Black);
         window.draw(game_rect);
         for (int i = 0; i < rows;i++ )
             for (int j = 0; j < cols; j++)
@@ -239,7 +240,7 @@ void intialize_restart(int game_array[rows][cols], CircleShape game_circles[rows
     curr_player_text.setString("Player: "+to_string(curr_player.p_turn));
     
     // reset the result_text
-    result_text.setColor(Color::Black);
+    result_text.setColor(Color::White);
     result_text.setString("");
     
     game_end = false;
@@ -292,6 +293,10 @@ bool checker(int game_array[rows][cols], player &curr_player, int row, int col, 
 
 bool check_won(int game_array[rows][cols], player &curr_player){
     
+    // If the win_size is greater than both the rows & cols, no player will ever win
+    if(win_size > cols && win_size > rows){
+        return false;
+    }
     // horizontal checking
     for (int i = 0; i < rows; i++)  // We check each row
         for(int j = 0; j < cols-win_size+1; j++)
@@ -329,5 +334,5 @@ bool game_finished(int a[rows][cols])
             if (a[i][j] == 0)
                 return false;
     
-    return false;
+    return true;
 }
